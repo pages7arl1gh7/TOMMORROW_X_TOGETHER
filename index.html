@@ -138,6 +138,51 @@
         h2 { font-size: 2rem; /* Larger than 2xl */ }
         p, label, select, input, .text-lg, .text-base, .text-sm { font-size: 1.2rem; } /* All text larger */
         .text-xl { font-size: 1.5rem; } /* Score display larger */
+
+        /* Custom message box styling */
+        .custom-message-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000; /* Higher than other modals */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .custom-message-modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .custom-message-content {
+            background-color: #222222;
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            text-align: center;
+            color: #e0e0e0;
+            font-size: 1.25rem; /* Larger text for messages */
+        }
+        .custom-message-content button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #e31b23;
+            color: white;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        .custom-message-content button:hover {
+            background-color: #cc0000;
+        }
     </style>
 </head>
 <body class="p-4 md:p-8">
@@ -247,6 +292,14 @@
         </div>
     </div>
 
+    <!-- 自定義訊息彈窗 -->
+    <div id="customMessageModal" class="custom-message-modal">
+        <div class="custom-message-content">
+            <p id="customMessageText"></p>
+            <button id="customMessageCloseBtn" class="mt-4">關閉</button>
+        </div>
+    </div>
+
     <script>
         const languageModal = document.getElementById('languageModal');
         const languageSelect = document.getElementById('languageSelect');
@@ -265,6 +318,11 @@
         const finalScoreDisplay = document.getElementById('finalScore');
         const recommendationText = document.getElementById('recommendationText');
         const closeRecommendationBtn = document.getElementById('closeRecommendationBtn');
+
+        // Custom message modal elements
+        const customMessageModal = document.getElementById('customMessageModal');
+        const customMessageText = document.getElementById('customMessageText');
+        const customMessageCloseBtn = document.getElementById('customMessageCloseBtn');
 
         let cameraStream;
         let currentScore = 0;
@@ -297,9 +355,9 @@
                 recommendationTitle: "運動成果與建議",
                 yourScoreIs: "您的總得分是:",
                 confirmBtn: "確認",
-                msgCameraAccessDenied: "無法啟動攝影機，請檢查權限或設備。",
-                msgCameraNotFound: "無法找到攝影機。請確認攝影機已連接且運作正常。",
-                msgCameraPermissionDenied: "攝影機權限被拒絕。請在瀏覽器設定中允許本應用程式使用攝影機。",
+                msgCameraAccessDenied: "無法啟動攝影機。請檢查權限或設備。",
+                msgCameraNotFound: "無法找到攝影機。請確認攝影機已連接且運作正常，或嘗試連接其他攝影機。",
+                msgCameraPermissionDenied: "攝影機權限被拒絕。請在您的瀏覽器設定中允許本應用程式使用攝影機，然後重新整理頁面。",
                 msgExerciseStart: "運動開始！請跟隨教練動作。",
                 msgExerciseEnd: "運動結束！",
                 recLowScore: "您剛開始運動，表現不錯！建議您可以多練習基礎的平衡動作，例如單腳站立練習。",
@@ -330,9 +388,9 @@
                 recommendationTitle: "Exercise Results & Suggestions",
                 yourScoreIs: "Your total score is:",
                 confirmBtn: "Confirm",
-                msgCameraAccessDenied: "Cannot access camera, please check permissions or device.",
-                msgCameraNotFound: "Camera not found. Please ensure your camera is connected and working correctly.",
-                msgCameraPermissionDenied: "Camera permission denied. Please allow this app to use the camera in your browser settings.",
+                msgCameraAccessDenied: "Cannot access camera. Please check permissions or device.",
+                msgCameraNotFound: "Camera not found. Please ensure your camera is connected and working correctly, or try connecting another camera.",
+                msgCameraPermissionDenied: "Camera permission denied. Please allow this app to use the camera in your browser settings, then refresh the page.",
                 msgExerciseStart: "Exercise started! Please follow the coach's movements.",
                 msgExerciseEnd: "Exercise ended!",
                 recLowScore: "You've just started exercising and performed well! It is recommended that you practice basic balancing movements, such as single-leg standing exercises.",
@@ -364,8 +422,8 @@
                 yourScoreIs: "총 점수:",
                 confirmBtn: "확인",
                 msgCameraAccessDenied: "카메라에 접근할 수 없습니다. 권한 또는 장치를 확인하십시오.",
-                msgCameraNotFound: "카메라를 찾을 수 없습니다. 카메라가 연결되어 있고 제대로 작동하는지 확인하십시오.",
-                msgCameraPermissionDenied: "카메라 권한이 거부되었습니다. 브라우저 설정에서 이 앱이 카메라를 사용하도록 허용하십시오.",
+                msgCameraNotFound: "카메라를 찾을 수 없습니다. 카메라가 연결되어 있고 제대로 작동하는지 확인하십시오. 또는 다른 카메라를 연결해 보십시오.",
+                msgCameraPermissionDenied: "카메라 권한이 거부되었습니다. 브라우저 설정에서 이 앱이 카메라를 사용하도록 허용하십시오. 그런 다음 페이지를 새로 고치십시오.",
                 msgExerciseStart: "운동 시작! 코치의 동작을 따라하세요.",
                 msgExerciseEnd: "운동 종료!",
                 recLowScore: "막 운동을 시작하셨지만 잘하셨어요! 한 발로 서기 연습과 같은 기본적인 균형 동작을 더 많이 연습하는 것이 좋습니다.",
@@ -396,9 +454,18 @@
                     }
                 }
             });
-            // Removed redundant specific queries for options which caused the TypeError.
-            // The main forEach loop with `data-lang-key` handles them correctly.
         }
+
+        // Custom message box to replace alert
+        function showCustomMessage(message) {
+            customMessageText.innerHTML = message; // Use innerHTML to allow for <br> tags
+            customMessageModal.classList.add('open');
+        }
+
+        // Close custom message box
+        customMessageCloseBtn.addEventListener('click', () => {
+            customMessageModal.classList.remove('open');
+        });
 
         // Handle language selection
         confirmLanguageBtn.addEventListener('click', () => {
@@ -439,12 +506,14 @@
                 };
             } catch (err) {
                 console.error("無法存取攝影機: ", err);
-                let errorMessageKey = 'msgCameraAccessDenied'; // Default general message
+                let errorMessageKey; // Default general message
 
                 if (err.name === 'NotFoundError') {
                     errorMessageKey = 'msgCameraNotFound'; // Specific for device not found
                 } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
                     errorMessageKey = 'msgCameraPermissionDenied'; // Specific for permission denied
+                } else {
+                    errorMessageKey = 'msgCameraAccessDenied'; // General access denied
                 }
                 showCustomMessage(translations[currentLang][errorMessageKey]);
             }
@@ -485,27 +554,6 @@
             }
 
             // requestAnimationFrame(poseDetectionLoop); // Continue next frame
-        }
-
-        // Custom message box to replace alert
-        function showCustomMessage(message) {
-            const existingMessage = document.getElementById('customMessage');
-            if (existingMessage) existingMessage.remove();
-
-            const msgDiv = document.createElement('div');
-            msgDiv.id = 'customMessage';
-            msgDiv.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-600 text-white p-4 rounded-lg shadow-lg z-[1001] transition-opacity duration-300 opacity-0 text-xl'; /* Larger text for message */
-            msgDiv.textContent = message;
-            document.body.appendChild(msgDiv);
-
-            setTimeout(() => {
-                msgDiv.classList.add('opacity-100');
-            }, 50);
-
-            setTimeout(() => {
-                msgDiv.classList.remove('opacity-100');
-                msgDiv.addEventListener('transitionend', () => msgDiv.remove());
-            }, 3000);
         }
 
         // Start exercise
