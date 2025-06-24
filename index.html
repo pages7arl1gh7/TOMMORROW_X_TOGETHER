@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>樂活平衡家 - 長者協調平衡訓練</title>
+    <!-- Tailwind CSS CDN for responsive design and styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            color: #334155; /* Dark text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            width: 100%;
+            max-width: 768px; /* Max width for tablets */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-align: center;
+            display: inline-block;
+        }
+        .btn-primary {
+            background-color: #4CAF50; /* Green */
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        .btn-secondary {
+            background-color: #ef4444; /* Red */
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            box-sizing: border-box;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal.open {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background-color: #ffffff;
+            border-radius: 15px;
+            padding: 30px;
+            width: 100%;
+            max-width: 500px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-height: 90vh; /* Ensure modal fits on smaller screens */
+            overflow-y: auto; /* Allow scrolling for long content */
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 75%; /* 4:3 Aspect Ratio (height / width * 100%) */
+            background-color: #e2e8f0; /* Placeholder background */
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
+        }
+        .video-container video,
+        .video-container canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Cover the area */
+            transform: scaleX(-1); /* Mirror user's camera horizontally */
+        }
+        #coachVideo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 25%; /* Left quarter */
+            height: 25%; /* Top quarter */
+            object-fit: cover;
+            z-index: 50; /* Above user video/canvas */
+            border-radius: 10px;
+            overflow: hidden;
+            border: 3px solid #3b82f6; /* Blue border for coach video */
+            transform: scaleX(1); /* Don't mirror coach video */
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 640px) { /* Small screens and up */
+            .video-container {
+                padding-top: 56.25%; /* 16:9 Aspect Ratio on larger screens */
+            }
+            #coachVideo {
+                width: 25%; /* Remains 25% for small and up */
+                height: 25%; /* Remains 25% for small and up */
+            }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <!-- 免責聲明與資料收集 Modal -->
+    <div id="disclaimerModal" class="modal open">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4 text-gray-800">免責聲明與隱私條款</h2>
+            <p class="text-sm text-gray-600 mb-6 leading-relaxed">
+                本應用程式旨在提供協調和平衡訓練的輔助工具，內容僅供參考，不能取代專業醫療診斷、建議或治療。
+                在使用本應用程式進行任何運動前，請務必諮詢您的醫生或專業醫療人員，確保您的身體狀況適合進行此類活動。
+                若在運動過程中感到任何不適或疼痛，請立即停止並尋求醫療協助。
+                <br><br>
+                為了提供更個人化的運動建議，我們將收集您的基本資料（年齡、性別、體重）。
+                <strong>請注意，您的個人資料僅用於本次運動分析，我們不會儲存、記錄或分享您的任何個人身份資訊。</strong> 您的隱私受到嚴格保護。
+            </p>
+            <form id="userDataForm" class="text-left mb-6">
+                <div class="mb-4">
+                    <label for="age" class="block text-gray-700 text-sm font-medium mb-1">年齡:</label>
+                    <input type="number" id="age" name="age" min="50" max="120" required
+                           class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="mb-4">
+                    <label for="gender" class="block text-gray-700 text-sm font-medium mb-1">性別:</label>
+                    <select id="gender" name="gender" required
+                            class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">請選擇</option>
+                        <option value="male">男</option>
+                        <option value="female">女</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+                <div class="mb-6">
+                    <label for="weight" class="block text-gray-700 text-sm font-medium mb-1">體重 (公斤):</label>
+                    <input type="number" id="weight" name="weight" min="20" max="200" step="0.1" required
+                           class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <button type="submit" class="btn btn-primary w-full">我同意並開始使用</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 主應用程式介面 -->
+    <div id="mainApp" class="container hidden">
+        <h1 class="text-3xl font-bold text-center text-blue-700">樂活平衡家</h1>
+
+        <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="w-full md:w-1/2">
+                <label for="difficulty" class="block text-gray-700 text-base font-medium mb-2">選擇運動難度:</label>
+                <select id="difficulty"
+                        class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg">
+                    <option value="low">低</option>
+                    <option value="medium">中</option>
+                    <option value="high">高</option>
+                </select>
+            </div>
+            <div class="w-full md:w-1/2 flex justify-center md:justify-end gap-3">
+                <button id="startBtn" class="btn btn-primary flex-grow md:flex-none">開始運動</button>
+                <button id="stopBtn" class="btn btn-secondary flex-grow md:flex-none hidden">結束運動</button>
+            </div>
+        </div>
+
+        <div class="video-container relative">
+            <!-- 教練示範區 - 左上四分之一 -->
+            <video id="coachVideo" autoplay muted loop playsinline class="rounded-lg shadow-lg">
+                <!-- 可以替換為實際的教練示範影片URL -->
+                <source src="https://www.w3schools.com/tags/movie.mp4" type="video/mp4">
+                您的瀏覽器不支援影片播放。
+            </video>
+
+            <!-- 使用者實時影像區 - 其餘四分之三 -->
+            <video id="userVideo" autoplay playsinline muted class="rounded-lg"></video>
+            <!-- 用於人體模型疊加的 Canvas -->
+            <canvas id="poseCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+        </div>
+
+        <div class="flex justify-between items-center bg-blue-100 p-4 rounded-lg shadow-md">
+            <span class="text-xl font-semibold text-blue-800">得分: <span id="scoreDisplay">0</span></span>
+            <!-- 這裡可以加入更多控制或訊息 -->
+        </div>
+    </div>
+
+    <!-- 運動結束推薦 Modal -->
+    <div id="recommendationModal" class="modal">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4 text-green-700">運動成果與建議</h2>
+            <p class="text-lg text-gray-800 mb-4">您的總得分是: <span id="finalScore" class="font-bold text-blue-600">0</span></p>
+            <p class="text-base text-gray-700 mb-6 leading-relaxed" id="recommendationText">
+                <!-- 這裡會顯示根據分數生成的建議 -->
+            </p>
+            <button id="closeRecommendationBtn" class="btn btn-primary w-full">確認</button>
+        </div>
+    </div>
+
+    <script>
+        const disclaimerModal = document.getElementById('disclaimerModal');
+        const userDataForm = document.getElementById('userDataForm');
+        const mainApp = document.getElementById('mainApp');
+        const difficultySelect = document.getElementById('difficulty');
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const coachVideo = document.getElementById('coachVideo');
+        const userVideo = document.getElementById('userVideo');
+        const poseCanvas = document.getElementById('poseCanvas');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const recommendationModal = document.getElementById('recommendationModal');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const recommendationText = document.getElementById('recommendationText');
+        const closeRecommendationBtn = document.getElementById('closeRecommendationBtn');
+
+        let cameraStream;
+        let currentScore = 0;
+        let gameInterval;
+        let userData = {}; // 儲存用戶資料，不進行持久化
+
+        // 處理免責聲明同意與用戶資料收集
+        userDataForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            userData = {
+                age: document.getElementById('age').value,
+                gender: document.getElementById('gender').value,
+                weight: document.getElementById('weight').value
+            };
+            // 關閉免責聲明彈窗，顯示主應用程式
+            disclaimerModal.classList.remove('open');
+            mainApp.classList.remove('hidden');
+            initializeCamera(); // 初始化攝影機
+            coachVideo.play(); // 開始播放教練影片
+        });
+
+        // 初始化攝影機
+        async function initializeCamera() {
+            try {
+                // 請求用戶攝影機權限
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                userVideo.srcObject = cameraStream;
+                // 等待影片載入完成，設定 Canvas 尺寸
+                userVideo.onloadedmetadata = () => {
+                    poseCanvas.width = userVideo.videoWidth;
+                    poseCanvas.height = userVideo.videoHeight;
+                    // 開始姿態估計迴圈（在此僅為示意，需要整合ML函式庫）
+                    // requestAnimationFrame(poseDetectionLoop);
+                };
+            } catch (err) {
+                console.error("無法存取攝影機: ", err);
+                // 顯示錯誤訊息給用戶
+                showCustomMessage("無法啟動攝影機，請檢查權限或設備。");
+            }
+        }
+
+        // 模擬姿態估計和人體模型繪製 (此為示意功能，實際需要 ML 函式庫)
+        // 在真實應用中，這裡會整合 MediaPipe 或 TensorFlow.js
+        function poseDetectionLoop() {
+            const ctx = poseCanvas.getContext('2d');
+            ctx.clearRect(0, 0, poseCanvas.width, poseCanvas.height); // 清空 Canvas
+
+            // 實際這裡會使用姿態估計模型從 userVideo 中獲取骨架點
+            // 並將教練模型和使用者骨架繪製到 poseCanvas 上
+
+            // 模擬繪製一個簡單的人體模型 (圓點代表關節)
+            if (userVideo.readyState === userVideo.HAVE_ENOUGH_DATA) {
+                // 畫一個簡單的骨架示意
+                ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // 紅色半透明
+                ctx.beginPath();
+                ctx.arc(poseCanvas.width * 0.5, poseCanvas.height * 0.5, 30, 0, 2 * Math.PI); // 中心點
+                ctx.arc(poseCanvas.width * 0.4, poseCanvas.height * 0.3, 15, 0, 2 * Math.PI); // 左上臂
+                ctx.arc(poseCanvas.width * 0.6, poseCanvas.height * 0.3, 15, 0, 2 * Math.PI); // 右上臂
+                ctx.arc(poseCanvas.width * 0.45, poseCanvas.height * 0.7, 20, 0, 2 * Math.PI); // 左腿
+                ctx.arc(poseCanvas.width * 0.55, poseCanvas.height * 0.7, 20, 0, 2 * Math.PI); // 右腿
+                ctx.fill();
+
+                ctx.strokeStyle = 'rgba(255, 255, 0, 0.7)'; // 黃色線條
+                ctx.lineWidth = 5;
+                ctx.beginPath();
+                ctx.moveTo(poseCanvas.width * 0.4, poseCanvas.height * 0.3);
+                ctx.lineTo(poseCanvas.width * 0.6, poseCanvas.height * 0.3);
+                ctx.stroke();
+                // ... 更多骨架線條繪製
+
+                // 這裡會加入邏輯來比較用戶動作與教練動作，並計算得分
+                // currentScore += (Math.random() > 0.5 ? 1 : 0); // 模擬得分
+                // scoreDisplay.textContent = currentScore;
+            }
+
+            // requestAnimationFrame(poseDetectionLoop); // 繼續下一幀
+        }
+
+        // 自定義訊息框取代 alert
+        function showCustomMessage(message) {
+            const existingMessage = document.getElementById('customMessage');
+            if (existingMessage) existingMessage.remove();
+
+            const msgDiv = document.createElement('div');
+            msgDiv.id = 'customMessage';
+            msgDiv.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-600 text-white p-4 rounded-lg shadow-lg z-[1001] transition-opacity duration-300 opacity-0';
+            msgDiv.textContent = message;
+            document.body.appendChild(msgDiv);
+
+            setTimeout(() => {
+                msgDiv.classList.add('opacity-100');
+            }, 50);
+
+            setTimeout(() => {
+                msgDiv.classList.remove('opacity-100');
+                msgDiv.addEventListener('transitionend', () => msgDiv.remove());
+            }, 3000);
+        }
+
+        // 開始運動
+        startBtn.addEventListener('click', () => {
+            currentScore = 0;
+            scoreDisplay.textContent = currentScore;
+            startBtn.classList.add('hidden');
+            stopBtn.classList.remove('hidden');
+            showCustomMessage("運動開始！請跟隨教練動作。");
+
+            // 模擬運動計分 (實際應基於姿態識別)
+            gameInterval = setInterval(() => {
+                currentScore += Math.floor(Math.random() * 5) + 1; // 每次增加隨機分數
+                scoreDisplay.textContent = currentScore;
+            }, 1000); // 每秒更新分數
+            // 這裡可以啟動真正的姿態識別迴圈
+            // requestAnimationFrame(poseDetectionLoop);
+        });
+
+        // 結束運動
+        stopBtn.addEventListener('click', () => {
+            clearInterval(gameInterval); // 停止模擬計分
+            stopBtn.classList.add('hidden');
+            startBtn.classList.remove('hidden');
+            showCustomMessage("運動結束！");
+            showRecommendationModal();
+        });
+
+        // 顯示推薦彈窗
+        function showRecommendationModal() {
+            finalScoreDisplay.textContent = currentScore;
+            let recommendation = "";
+
+            if (currentScore < 50) {
+                recommendation = "您剛開始運動，表現不錯！建議您可以多練習基礎的平衡動作，例如單腳站立練習。";
+            } else if (currentScore >= 50 && currentScore < 150) {
+                recommendation = "您的表現越來越好！可以嘗試一些輕微的協調性運動，像是左右手交替觸碰膝蓋，或是結合手部與腿部的簡單伸展。";
+            } else {
+                recommendation = "恭喜您表現非常出色！您的協調性和平衡感都很好。建議您可以繼續挑戰更複雜的動作，例如加入一些動態的平衡訓練或輕柔的舞蹈動作。";
+            }
+            // 聲明不推薦特定產品
+            recommendation += "<br><br>我們不推薦任何特定品牌的保健品。若您考慮服用任何保健品以增強協調性，請務必諮詢您的醫生或藥劑師的專業建議。";
+
+            recommendationText.innerHTML = recommendation;
+            recommendationModal.classList.add('open');
+        }
+
+        // 關閉推薦彈窗
+        closeRecommendationBtn.addEventListener('click', () => {
+            recommendationModal.classList.remove('open');
+            currentScore = 0; // 重置分數
+            scoreDisplay.textContent = currentScore;
+        });
+
+        // 在視窗載入時確保影片元素準備好
+        window.onload = function() {
+            // Coach video might autoplay, but ensure user video is ready after camera init
+            if (coachVideo) {
+                coachVideo.play().catch(e => console.log("Coach video autoplay prevented:", e));
+            }
+        };
+
+    </script>
+</body>
+</html>
