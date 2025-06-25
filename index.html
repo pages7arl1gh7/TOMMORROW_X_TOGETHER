@@ -7,11 +7,13 @@
     <!-- Tailwind CSS CDN for responsive design and styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- MediaPipe Vision CDN for Pose Landmarker -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js" type="module"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #1a1a1a; /* Dark background */
-            color: #e0e0e0; /* Light text */
+            background-color: #778899; /* LightSlateGray background */
+            color: #A52A2A; /* Brown font color */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -20,9 +22,9 @@
             box-sizing: border-box;
         }
         .container {
-            background-color: #333333; /* Darker container background */
+            background-color: #FFFFFF; /* White container background for contrast */
             border-radius: 20px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
             padding: 24px;
             width: 100%;
             max-width: 768px; /* Max width for tablets */
@@ -42,19 +44,19 @@
             font-size: 1.25rem; /* Larger text */
         }
         .btn-primary {
-            background-color: #e31b23; /* Red primary */
+            background-color: #A52A2A; /* Brown primary */
             color: white;
         }
         .btn-primary:hover {
-            background-color: #cc0000;
+            background-color: #8B1A1A; /* Darker brown for hover */
             transform: translateY(-2px);
         }
         .btn-secondary {
-            background-color: #888888; /* Dark grey secondary */
-            color: white;
+            background-color: #D3D3D3; /* Light grey for secondary */
+            color: #333333; /* Dark text on secondary button */
         }
         .btn-secondary:hover {
-            background-color: #666666;
+            background-color: #C0C0C0; /* Slightly darker grey for hover */
             transform: translateY(-2px);
         }
         .modal {
@@ -63,7 +65,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.8); /* Darker overlay */
+            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent dark overlay */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -79,25 +81,25 @@
             visibility: visible;
         }
         .modal-content {
-            background-color: #222222; /* Dark modal background */
+            background-color: #FFFFFF; /* White modal background */
             border-radius: 15px;
             padding: 30px;
             width: 100%;
             max-width: 500px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
             text-align: center;
             max-height: 90vh;
             overflow-y: auto;
-            color: #e0e0e0; /* Light text in modal */
+            color: #333333; /* Dark text in modal */
         }
         .video-container {
             position: relative;
             width: 100%;
             padding-top: 75%; /* 4:3 Aspect Ratio (height / width * 100%) */
-            background-color: #444444; /* Placeholder background */
+            background-color: #B0C4DE; /* LightSteelBlue for video placeholder, blends with background */
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: inset 0 0 8px rgba(0,0,0,0.2);
+            box-shadow: inset 0 0 8px rgba(0,0,0,0.1);
         }
         .video-container video,
         .video-container canvas {
@@ -119,7 +121,7 @@
             z-index: 50;
             border-radius: 10px;
             overflow: hidden;
-            border: 3px solid #e31b23; /* Red border for coach video */
+            border: 3px solid #A52A2A; /* Brown border for coach video */
             transform: scaleX(1); /* Don't mirror coach video */
         }
 
@@ -160,20 +162,20 @@
             visibility: visible;
         }
         .custom-message-content {
-            background-color: #222222;
+            background-color: #FFFFFF; /* White background for message modal */
             border-radius: 15px;
             padding: 30px;
             width: 100%;
             max-width: 400px;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
             text-align: center;
-            color: #e0e0e0;
+            color: #333333; /* Dark text for message */
             font-size: 1.25rem; /* Larger text for messages */
         }
         .custom-message-content button {
             margin-top: 20px;
             padding: 10px 20px;
-            background-color: #e31b23;
+            background-color: #A52A2A; /* Brown button */
             color: white;
             border-radius: 8px;
             font-weight: 600;
@@ -181,7 +183,33 @@
             transition: background-color 0.3s ease;
         }
         .custom-message-content button:hover {
-            background-color: #cc0000;
+            background-color: #8B1A1A;
+        }
+        /* Tailwind classes for text colors for consistency with theme */
+        .text-red-500 { color: #A52A2A; } /* Use Brown for highlights and primary text */
+        .text-gray-200 { color: #555555; } /* Darker grey for labels on light backgrounds */
+        .text-gray-400 { color: #777777; } /* Even darker grey for disclaimer text */
+        .bg-gray-700 { background-color: #F0F8FF; /* AliceBlue for score bar */
+            color: #333333; /* Dark text for score bar */
+        }
+        .border-gray-600 { border-color: #DDDDDD; } /* Lighter border for inputs */
+        .bg-gray-700.text-white { /* For select and input backgrounds */
+            background-color: #E6E6FA; /* LavenderBlush for inputs */
+            color: #333333; /* Dark text for inputs */
+        }
+
+        /* Loading spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #A52A2A;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -193,7 +221,7 @@
             <div class="mb-6">
                 <label for="languageSelect" class="block text-gray-200 font-medium mb-1">請選擇您的語言:</label>
                 <select id="languageSelect"
-                        class="w-full p-3 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 text-lg bg-gray-700 text-white">
+                        class="w-full p-3 border border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-red-500 bg-gray-700 text-white">
                     <option value="zh-Hant">繁體中文</option>
                     <option value="en">English</option>
                     <option value="ko">한국어</option>
@@ -273,6 +301,10 @@
             <video id="userVideo" autoplay playsinline muted class="rounded-lg"></video>
             <!-- 用於人體模型疊加的 Canvas -->
             <canvas id="poseCanvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+            <div id="poseLoading" class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 rounded-lg hidden">
+                <div class="spinner"></div>
+                <p class="ml-4 text-lg font-semibold text-gray-700" data-lang-key="loadingPoseModel">正在載入姿態偵測模型...</p>
+            </div>
         </div>
 
         <div class="flex justify-between items-center bg-gray-700 p-4 rounded-lg shadow-md">
@@ -300,7 +332,9 @@
         </div>
     </div>
 
-    <script>
+    <script type="module">
+        import { PoseLandmarker, FilesetResolver, DrawingUtils } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js";
+
         const languageModal = document.getElementById('languageModal');
         const languageSelect = document.getElementById('languageSelect');
         const confirmLanguageBtn = document.getElementById('confirmLanguageBtn');
@@ -323,12 +357,20 @@
         const customMessageModal = document.getElementById('customMessageModal');
         const customMessageText = document.getElementById('customMessageText');
         const customMessageCloseBtn = document.getElementById('customMessageCloseBtn');
+        const poseLoadingDiv = document.getElementById('poseLoading');
+
 
         let cameraStream;
         let currentScore = 0;
         let gameInterval;
         let userData = {}; // Store user data, not for persistence
         let currentLang = 'zh-Hant'; // Default language
+
+        // MediaPipe related variables
+        let poseLandmarker = undefined;
+        let runningMode = "VIDEO";
+        let lastVideoTime = -1;
+        const drawingUtils = new DrawingUtils(poseCanvas.getContext('2d'));
 
         // Language translations
         const translations = {
@@ -363,7 +405,8 @@
                 recLowScore: "您剛開始運動，表現不錯！建議您可以多練習基礎的平衡動作，例如單腳站立練習。",
                 recMidScore: "您的表現越來越好！可以嘗試一些輕微的協調性運動，像是左右手交替觸碰膝蓋，或是結合手部與腿部的簡單伸展。",
                 recHighScore: "恭喜您表現非常出色！您的協調性和平衡感都很好。建議您可以繼續挑戰更複雜的動作，例如加入一些動態的平衡訓練或輕柔的舞蹈動作。",
-                recDisclaimer: "我們不推薦任何特定品牌的保健品。若您考慮服用任何保健品以增強協調性，請務必諮詢您的醫生或藥劑師的專業建議。"
+                recDisclaimer: "我們不推薦任何特定品牌的保健品。若您考慮服用任何保健品以增強協調性，請務必諮詢您的醫生或藥劑師的專業建議。",
+                loadingPoseModel: "正在載入姿態偵測模型..."
             },
             'en': {
                 disclaimerTitle: "Disclaimer & Privacy Policy",
@@ -396,7 +439,8 @@
                 recLowScore: "You've just started exercising and performed well! It is recommended that you practice basic balancing movements, such as single-leg standing exercises.",
                 recMidScore: "You're getting better! You can try some mild coordination exercises, like alternating hand touches to your knees, or simple stretches combining arm and leg movements.",
                 recHighScore: "Congratulations on your excellent performance! Your coordination and balance are both very good. It is recommended that you continue to challenge more complex movements, such as incorporating dynamic balance training or gentle dance movements.",
-                recDisclaimer: "We do not recommend any specific brands of health supplements. If you are considering taking any health supplements to enhance coordination, please consult your doctor or pharmacist for professional advice."
+                recDisclaimer: "We do not recommend any specific brands of health supplements. If you are considering taking any health supplements to enhance coordination, please consult your doctor or pharmacist for professional advice.",
+                loadingPoseModel: "Loading Pose Detection Model..."
             },
             'ko': {
                 disclaimerTitle: "면책 조항 및 개인정보 처리방침",
@@ -429,7 +473,8 @@
                 recLowScore: "막 운동을 시작하셨지만 잘하셨어요! 한 발로 서기 연습과 같은 기본적인 균형 동작을 더 많이 연습하는 것이 좋습니다.",
                 recMidScore: "점점 나아지고 계십니다! 무릎에 손을 번갈아 대거나 팔과 다리 동작을 결합한 간단한 스트레칭과 같이 가벼운 협응 운동을 시도해 볼 수 있습니다.",
                 recHighScore: "훌륭하게 잘하셨습니다! 당신의 협응력과 균형 감각은 모두 매우 좋습니다. 동적인 균형 훈련이나 부드러운 춤 동작을 포함하는 등 더 복잡한 동작에 계속 도전하는 것이 좋습니다.",
-                recDisclaimer: "특정 브랜드의 건강 보조 식품은 추천하지 않습니다. 협응력을 향상시키기 위해 건강 보조 식품 섭취를 고려하고 있다면, 반드시 의사 또는 약사에게 전문적인 조언을 구하십시오."
+                recDisclaimer: "특정 브랜드의 건강 보조 식품은 추천하지 않습니다. 협응력을 향상시키기 위해 건강 보조 식품 섭취를 고려하고 있다면, 반드시 의사 또는 약사에게 전문적인 조언을 구하십시오。",
+                loadingPoseModel: "자세 감지 모델 로드 중..."
             }
         };
 
@@ -438,18 +483,13 @@
             document.querySelectorAll('[data-lang-key]').forEach(element => {
                 const key = element.getAttribute('data-lang-key');
                 if (translations[lang] && translations[lang][key]) {
-                    // For input, select, textarea, update placeholder or inner text for options
                     if (element.tagName === 'INPUT' || element.tagName === 'SELECT' || element.tagName === 'TEXTAREA') {
                         if (element.placeholder) {
                             element.placeholder = translations[lang][key];
                         }
-                    }
-                    // For OPTION elements, update textContent
-                    else if (element.tagName === 'OPTION') {
+                    } else if (element.tagName === 'OPTION') {
                         element.textContent = translations[lang][key];
-                    }
-                    // For all other elements, update innerHTML
-                    else {
+                    } else {
                         element.innerHTML = translations[lang][key];
                     }
                 }
@@ -458,7 +498,7 @@
 
         // Custom message box to replace alert
         function showCustomMessage(message) {
-            customMessageText.innerHTML = message; // Use innerHTML to allow for <br> tags
+            customMessageText.innerHTML = message;
             customMessageModal.classList.add('open');
         }
 
@@ -487,76 +527,96 @@
             // Close disclaimer modal, show main app
             disclaimerModal.classList.remove('open');
             mainApp.classList.remove('hidden');
-            initializeCamera(); // Initialize camera
+            initializeCameraAndPoseLandmarker(); // Initialize camera and MediaPipe
             coachVideo.play(); // Start playing coach video
         });
 
-        // Initialize camera
-        async function initializeCamera() {
+        // Initialize camera and MediaPipe Pose Landmarker
+        async function initializeCameraAndPoseLandmarker() {
+            poseLoadingDiv.classList.remove('hidden'); // Show loading spinner
+
             try {
+                // Initialize MediaPipe PoseLandmarker
+                const fileset = await FilesetResolver.forVisionTasks(
+                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+                );
+                poseLandmarker = await PoseLandmarker.createFromOptions(fileset, {
+                    baseOptions: {
+                        modelAssetPath: `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task`,
+                        delegate: "GPU"
+                    },
+                    runningMode: runningMode,
+                    numPoses: 1
+                });
+                poseLoadingDiv.classList.add('hidden'); // Hide loading spinner
+
                 // Request user camera permission
                 cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
                 userVideo.srcObject = cameraStream;
-                // Wait for video to load, set Canvas dimensions
+
                 userVideo.onloadedmetadata = () => {
                     poseCanvas.width = userVideo.videoWidth;
                     poseCanvas.height = userVideo.videoHeight;
-                    // Start pose estimation loop (illustrative only, requires ML library)
-                    // requestAnimationFrame(poseDetectionLoop);
+                    userVideo.play(); // Ensure video starts playing
+                    window.requestAnimationFrame(poseDetectionLoop); // Start MediaPipe detection loop
                 };
             } catch (err) {
-                console.error("無法存取攝影機: ", err);
-                let errorMessageKey; // Default general message
+                console.error("無法存取攝影機或載入姿態偵測模型: ", err);
+                let errorMessageKey;
 
                 if (err.name === 'NotFoundError') {
-                    errorMessageKey = 'msgCameraNotFound'; // Specific for device not found
+                    errorMessageKey = 'msgCameraNotFound';
                 } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    errorMessageKey = 'msgCameraPermissionDenied'; // Specific for permission denied
+                    errorMessageKey = 'msgCameraPermissionDenied';
                 } else {
-                    errorMessageKey = 'msgCameraAccessDenied'; // General access denied
+                    errorMessageKey = 'msgCameraAccessDenied';
                 }
                 showCustomMessage(translations[currentLang][errorMessageKey]);
+                poseLoadingDiv.classList.add('hidden'); // Hide loading spinner on error
             }
         }
 
-        // Simulate pose estimation and human model drawing (illustrative only, requires ML library)
-        // In a real application, MediaPipe or TensorFlow.js would be integrated here
-        function poseDetectionLoop() {
-            const ctx = poseCanvas.getContext('2d');
-            ctx.clearRect(0, 0, poseCanvas.width, poseCanvas.height); // Clear Canvas
-
-            // Actual pose estimation model would be used here to get skeleton points from userVideo
-            // and draw coach model and user skeleton onto poseCanvas
-
-            // Simulate drawing a simple human model (dots represent joints)
-            if (userVideo.readyState === userVideo.HAVE_ENOUGH_DATA) {
-                // Draw a simple skeleton illustration
-                ctx.fillStyle = 'rgba(255, 0, 0, 0.7)'; // Red translucent
-                ctx.beginPath();
-                ctx.arc(poseCanvas.width * 0.5, poseCanvas.height * 0.5, 30, 0, 2 * Math.PI); // Center point
-                ctx.arc(poseCanvas.width * 0.4, poseCanvas.height * 0.3, 15, 0, 2 * Math.PI); // Left upper arm
-                ctx.arc(poseCanvas.width * 0.6, poseCanvas.height * 0.3, 15, 0, 2 * Math.PI); // Right upper arm
-                ctx.arc(poseCanvas.width * 0.45, poseCanvas.height * 0.7, 20, 0, 2 * Math.PI); // Left leg
-                ctx.arc(poseCanvas.width * 0.55, poseCanvas.height * 0.7, 20, 0, 2 * Math.PI); // Right leg
-                ctx.fill();
-
-                ctx.strokeStyle = 'rgba(255, 255, 0, 0.7)'; // Yellow lines
-                ctx.lineWidth = 5;
-                ctx.beginPath();
-                ctx.moveTo(poseCanvas.width * 0.4, poseCanvas.height * 0.3);
-                ctx.lineTo(poseCanvas.width * 0.6, poseCanvas.height * 0.3);
-                ctx.stroke();
-                // ... More skeleton line drawing
-
-                // Logic to compare user's movement with coach's movement and calculate score would go here
-                // currentScore += (Math.random() > 0.5 ? 1 : 0); // Simulate score
-                // scoreDisplay.textContent = currentScore;
+        // MediaPipe pose detection loop
+        async function poseDetectionLoop() {
+            if (!poseLandmarker) {
+                console.warn("PoseLandmarker not loaded yet.");
+                window.requestAnimationFrame(poseDetectionLoop);
+                return;
             }
 
-            // requestAnimationFrame(poseDetectionLoop); // Continue next frame
+            // Only send new frames to MediaPipe if video is playing and time has advanced
+            if (userVideo.currentTime !== lastVideoTime) {
+                const results = poseLandmarker.detectForVideo(userVideo, performance.now());
+                
+                // Draw landmarks if results are available
+                const canvasCtx = poseCanvas.getContext('2d');
+                canvasCtx.clearRect(0, 0, poseCanvas.width, poseCanvas.height);
+                
+                if (results.landmarks) {
+                    for (const landmark of results.landmarks) {
+                        drawingUtils.drawConnectors(canvasCtx, landmark, DrawingUtils.POSE_CONNECTIONS, {
+                            color: '#00FF00', // Green color for skeleton
+                            lineWidth: 5
+                        });
+                        drawingUtils.drawLandmarks(canvasCtx, landmark, {
+                            radius: (x) => DrawingUtils.lerp(x.from.z, -0.15, 0.1, 10, 1),
+                            color: '#FF0000', // Red color for joints
+                            lineWidth: 2
+                        });
+                    }
+                    // Here you would add logic to compare user's pose with coach's pose
+                    // and update currentScore based on accuracy.
+                    // For now, continue simulated scoring
+                    // currentScore += (Math.random() > 0.8 ? 1 : 0); // Simulate scoring
+                    // scoreDisplay.textContent = currentScore;
+                }
+                lastVideoTime = userVideo.currentTime;
+            }
+
+            window.requestAnimationFrame(poseDetectionLoop);
         }
 
-        // Start exercise
+        // Start exercise (simulated scoring only)
         startBtn.addEventListener('click', () => {
             currentScore = 0;
             scoreDisplay.textContent = currentScore;
@@ -564,13 +624,11 @@
             stopBtn.classList.remove('hidden');
             showCustomMessage(translations[currentLang]['msgExerciseStart']);
 
-            // Simulate exercise scoring (should be based on pose recognition in real app)
+            // Simulate exercise scoring (actual scoring would integrate with MediaPipe pose analysis)
             gameInterval = setInterval(() => {
                 currentScore += Math.floor(Math.random() * 5) + 1; // Add random score each second
                 scoreDisplay.textContent = currentScore;
             }, 1000); // Update score every second
-            // Here, the actual pose recognition loop would be started
-            // requestAnimationFrame(poseDetectionLoop);
         });
 
         // End exercise
@@ -610,7 +668,6 @@
 
         // Ensure video elements are ready on window load
         window.onload = function() {
-            // Coach video might autoplay, but ensure user video is ready after camera init
             if (coachVideo) {
                 coachVideo.play().catch(e => console.log("Coach video autoplay prevented:", e));
             }
